@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Datos Partido Político - LETICIA CANTERO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000; /* Fondo negro */
+            color: #ffffff; /* Texto blanco por defecto sobre fondo negro */
+        }
+        .container {
+            max-width: 1400px; /* Ligeramente más ancho para filtros */
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background-color: white; /* Fondo blanco mantenido para el contenido principal */
+            color: #1f2937; /* Texto oscuro por defecto para el contenido en contenedor blanco */
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .form-section, .filter-section, .counter-section, .table-section {
+            margin-bottom: 2.5rem;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0; /* Borde gris claro mantenido (sobre fondo blanco) */
+            border-radius: 10px;
+        }
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #c53030; /* Rojo oscuro para títulos */
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e53e3e; /* Línea roja debajo del título */
+            padding-bottom: 0.5rem;
+        }
+        label {
+            font-weight: 500;
+            color: #374151; /* Gris oscuro para etiquetas (mantenido, sobre fondo blanco) */
+        }
+        input[type="text"], input[type="email"], input[type="tel"], select {
+            border-radius: 8px;
+            border: 1px solid #cbd5e1; /* Borde gris claro mantenido */
+            padding: 0.75rem 1rem;
+            transition: border-color 0.2s;
+            width: 100%;
+            color: #1f2937; /* Asegurar que el texto del input sea oscuro */
+            background-color: #ffffff; /* Fondo blanco para inputs y selects */
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #e53e3e; /* Borde rojo al enfocar */
+            box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.3); /* Sombra roja al enfocar */
+        }
+        button { /* Estilo base para botones, puede ser sobreescrito por clases de Tailwind */
+            background-color: #e53e3e; /* Rojo primario para botones */
+            color: white; /* Texto blanco mantenido */
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #c53030; /* Rojo más oscuro al pasar el mouse */
+        }
+        /* Estilos específicos para botones de acción en tabla */
+        .action-button {
+             background-color: transparent;
+             border: none;
+             padding: 0.25rem; /* Más pequeño */
+             margin-left: 0.25rem; /* Espacio reducido */
+             border-radius: 4px;
+             transition: background-color 0.2s;
+        }
+        .action-button svg {
+            width: 1.1rem; /* Iconos más pequeños */
+            height: 1.1rem;
+        }
+        .edit-button { color: #ffa500; } /* Naranja */
+        .edit-button:hover { background-color: #fff5e6; }
+        .copy-button { color: #4285F4; } /* Azul */
+        .copy-button:hover { background-color: #e8f0fe; }
+        .delete-button { color: #e53e3e; } /* Rojo */
+        .delete-button:hover { background-color: #fff5f5; }
+
+        /* Botón Cancelar Edición y Limpiar Filtros */
+        .secondary-button { /* Clase genérica para botones secundarios */
+            background-color: #6b7280; /* Gris */
+            margin-right: 0.5rem;
+        }
+        .secondary-button:hover {
+            background-color: #4b5563; /* Gris oscuro */
+        }
+
+
+        .whatsapp-link, .map-link {
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .whatsapp-link {
+            color: #25D366; /* Verde mantenido */
+        }
+        .map-link {
+            color: #4285F4; /* Azul de Google Maps */
+        }
+        .whatsapp-link:hover, .map-link:hover {
+            text-decoration: underline;
+        }
+        .table-auto th, .table-auto td {
+            padding: 0.5rem 0.75rem; /* Padding reducido en celdas */
+            border: 1px solid #e2e8f0; /* Borde gris claro mantenido */
+            color: #1f2937; /* Asegurar que el texto de las celdas sea oscuro */
+            font-size: 0.8rem; /* Texto aún más pequeño */
+            text-align: left;
+            vertical-align: middle;
+        }
+         .table-auto td.actions-cell {
+            white-space: nowrap; /* Evita que los botones se envuelvan */
+            text-align: center;
+        }
+        .table-auto th {
+            background-color: #f8fafc; /* Fondo gris claro para encabezados de tabla */
+            color: #c53030; /* Texto rojo oscuro para encabezados de tabla */
+            font-weight: 600;
+        }
+        .table-auto td {
+             color: #374151; /* Color de texto para celdas de datos, ajustado para legibilidad */
+        }
+        .counter-item {
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0; /* Borde por defecto */
+        }
+        .counter-item h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937; /* Color de texto por defecto */
+        }
+        .counter-item p {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937; /* Color de texto por defecto */
+        }
+        /* Colores específicos para contadores */
+        #counterTotal { background-color: #dcfce7; border-color: #86efac; } /* Verde */
+        #counterTotal h3, #counterTotal p { color: #15803d; }
+        #counterColorado { background-color: #fee2e2; border-color: #fca5a5; } /* Rojo */
+        #counterColorado h3, #counterColorado p { color: #b91c1c; }
+        #counterLiberal { background-color: #dbeafe; border-color: #93c5fd; } /* Azul */
+        #counterLiberal h3, #counterLiberal p { color: #1d4ed8; }
+        #counterNoParty { background-color: #f3f4f6; border-color: #d1d5db; } /* Gris claro */
+        #counterNoParty h3, #counterNoParty p { color: #374151; }
+
+
+        .custom-alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px 20px;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            font-size: 0.9rem;
+        }
+        .custom-alert.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-black">
+
+    <div class="container mx-auto p-4 md:p-6">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-red-700">LETICIA CANTERO</h1>
+            <p class="text-2xl text-gray-600 mt-1">LISTA DE VOTANTES</p>
+        </header>
+
+        <div id="customAlert" class="custom-alert">
+            <span id="alertMessage"></span>
+        </div>
+
+        <div class="form-section bg-white shadow-md rounded-lg p-6 mb-8">
+            <h2><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 inline-block mr-2 align-text-bottom"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3.75 19.5h16.5a.75.75 0 0 0 .75-.75V9a.75.75 0 0 0-.75-.75H3.75a.75.75 0 0 0-.75.75v9.75c0 .414.336.75.75.75Z" /></svg><span id="formTitle">Agregar Nueva Persona</span></h2>
+            <form id="addPersonForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Nombre y Apellido (*):</label>
+                    <input type="text" id="fullName" name="fullName" required class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label for="ci" class="block text-sm font-medium text-gray-700 mb-1">Cédula de Identidad (CI) (*):</label>
+                    <input type="text" id="ci" name="ci" required class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Número de Teléfono:</label>
+                    <input type="tel" id="phone" name="phone" placeholder="Ej: 0981123456" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email (Opcional):</label>
+                    <input type="email" id="email" name="email" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Dirección Domicilio:</label>
+                    <input type="text" id="address" name="address" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                </div>
+                 <div>
+                    <label for="department" class="block text-sm font-medium text-gray-700 mb-1">Departamento:</label>
+                    <select id="department" name="department" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        <option value="">Seleccione un departamento</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="city" class="block text-sm font-medium text-gray-700 mb-1">Ciudad:</label>
+                    <select id="city" name="city" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        <option value="">Seleccione una ciudad</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="barrio" class="block text-sm font-medium text-gray-700 mb-1">Barrio (Opcional si no hay lista):</label>
+                    <select id="barrio" name="barrio" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        <option value="">Seleccione un barrio</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="votingCenter" class="block text-sm font-medium text-gray-700 mb-1">Centro de Votación:</label>
+                    <input type="text" id="votingCenter" name="votingCenter" placeholder="Ingreso manual" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                </div>
+                 <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Género:</label>
+                    <select id="gender" name="gender" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        <option value="">Seleccione género</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="seccional" class="block text-sm font-medium text-gray-700 mb-1">Seccional Colorada (Opcional):</label>
+                    <select id="seccional" name="seccional" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        <option value="">Seleccione una seccional (si aplica)</option>
+                    </select>
+                </div>
+                <div class="md:col-span-1">
+                    <label for="party" class="block text-sm font-medium text-gray-700 mb-1">Partido Político:</label>
+                    <select id="party" name="party" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        <option value="">Seleccione un partido</option>
+                        <option value="Colorado">Colorado</option>
+                        <option value="Liberal">Liberal</option>
+                        <option value="Sin Partido">Sin Partido</option>
+                    </select>
+                </div>
+                <div class="md:col-span-3 text-right">
+                    <button type="button" id="cancelEditButton" class="secondary-button hidden inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                        Cancelar Edición
+                    </button>
+                    <button type="submit" id="submitButton" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        <svg id="submitButtonIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        <span id="submitButtonText">Agregar Persona</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="filter-section bg-white shadow-md rounded-lg p-6 mb-8">
+            <h2><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 inline-block mr-2 align-text-bottom"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>Filtros</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4"> <div>
+                    <label for="searchTerm" class="block text-sm font-medium text-gray-700 mb-1">Buscar (Nombre, CI, Teléfono):</label>
+                    <input type="text" id="searchTerm" placeholder="Escriba para buscar..." class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label for="filterDepartment" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Departamento:</label>
+                    <select id="filterDepartment" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filterCity" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Ciudad:</label>
+                    <select id="filterCity" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filterVotingCenter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Centro Votación:</label>
+                    <select id="filterVotingCenter" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        <option value="">Todos</option>
+                        </select>
+                </div>
+                <div>
+                    <label for="filterGender" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Género:</label>
+                    <select id="filterGender" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        <option value="">Todos</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filterParty" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Partido:</label>
+                    <select id="filterParty" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2">
+                        <option value="">Todos</option>
+                        <option value="Colorado">Colorado</option>
+                        <option value="Liberal">Liberal</option>
+                        <option value="Sin Partido">Sin Partido</option>
+                    </select>
+                </div>
+            </div>
+            <div class="text-right">
+                 <button type="button" id="clearFiltersButton" class="secondary-button inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                       <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /> <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    Limpiar Filtros
+                </button>
+            </div>
+        </div>
+        <div class="counter-section bg-white shadow-md rounded-lg p-6 mb-8">
+            <h2><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 inline-block mr-2 align-text-bottom"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>Contador de Miembros</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div id="counterTotal" class="counter-item">
+                    <h3>Total Miembros</h3>
+                    <p id="totalMembers">0</p>
+                </div>
+                <div id="counterColorado" class="counter-item">
+                    <h3>Colorados</h3>
+                    <p id="coloradoMembers">0</p>
+                </div>
+                <div id="counterLiberal" class="counter-item">
+                    <h3>Liberales</h3>
+                    <p id="liberalMembers">0</p>
+                </div>
+                <div id="counterNoParty" class="counter-item">
+                    <h3>Sin Partido</h3>
+                    <p id="noPartyMembers">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-section bg-white shadow-md rounded-lg p-6 overflow-x-auto">
+            <h2><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 inline-block mr-2 align-text-bottom"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5M8.25 12h7.5m-7.5 5.25h7.5M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>Lista de Personas Registradas</h2>
+            <table class="table-auto w-full mt-4 border-collapse border border-gray-300">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2 border border-gray-300">Nombre Completo</th>
+                        <th class="px-4 py-2 border border-gray-300">CI</th>
+                        <th class="px-4 py-2 border border-gray-300">Teléfono</th>
+                        <th class="px-4 py-2 border border-gray-300">Email</th>
+                        <th class="px-4 py-2 border border-gray-300">Dirección</th>
+                        <th class="px-4 py-2 border border-gray-300">Departamento</th>
+                        <th class="px-4 py-2 border border-gray-300">Ciudad</th>
+                        <th class="px-4 py-2 border border-gray-300">Barrio</th>
+                        <th class="px-4 py-2 border border-gray-300">Centro Votación</th>
+                        <th class="px-4 py-2 border border-gray-300">Género</th>
+                        <th class="px-4 py-2 border border-gray-300">Seccional</th>
+                        <th class="px-4 py-2 border border-gray-300">Partido</th>
+                        <th class="px-4 py-2 border border-gray-300">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="peopleTableBody">
+                    <tr>
+                        <td colspan="13" class="text-center py-4 text-gray-500">No hay personas registradas aún.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // --- INICIO DE DATOS DE PARAGUAY (EJEMPLOS) ---
+        const paraguayData = {
+            "Asunción (Distrito Capital)": ["Asunción"],
+            "Concepción": ["Concepción", "Horqueta", "Yby Yaú", "Loreto", "Belén"],
+            "San Pedro": ["San Pedro del Ycuamandiyú", "Antequera", "General Elizardo Aquino", "Guayaibí", "Itacurubí del Rosario", "Lima", "Nueva Germania", "San Estanislao (Santaní)", "San Pablo", "Tacuatí", "Unión", "Veinticinco de Diciembre", "Villa del Rosario", "Yataity del Norte", "Capiibary", "Choré", "General Isidoro Resquín", "Liberación", "San Vicente Pancholo", "Santa Rosa del Aguaray", "Yrybucuá"],
+            "Cordillera": ["Caacupé", "Altos", "Arroyos y Esteros", "Atyrá", "Caraguatay", "Emboscada", "Eusebio Ayala", "Isla Pucú", "Itacurubí de la Cordillera", "Juan de Mena", "Loma Grande", "Mbocayaty del Yhaguy", "Nueva Colombia", "Piribebuy", "Primero de Marzo", "San Bernardino", "San José Obrero", "Santa Elena", "Tobatí", "Valenzuela"],
+            "Guairá": ["Villarrica", "Borja", "Capitán Mauricio José Troche", "Coronel Martínez", "Doctor Botrell", "Félix Pérez Cardozo", "Garay", "Independencia", "Itapé", "Iturbe", "José Fassardi", "Mbocayaty del Guairá", "Natalicio Talavera", "Ñumí", "Paso Yobai", "San Salvador", "Tebicuary", "Yataity del Guairá"],
+            "Caaguazú": ["Coronel Oviedo", "Caaguazú", "Carayaó", "Cecilio Báez", "Doctor J. Eulogio Estigarribia (Campo 9)", "Doctor Juan Manuel Frutos", "José Domingo Ocampos", "La Pastora", "Mariscal Francisco Solano López", "Nueva Londres", "Nueva Toledo", "Repatriación", "R. I. Tres Corrales", "San Joaquín", "San José de los Arroyos", "Santa Rosa del Mbutuy", "Simón Bolívar", "Tembiaporá", "Tres de Febrero", "Vaquería", "Yhú"],
+            "Caazapá": ["Caazapá", "Abaí", "Buena Vista", "Doctor Moisés S. Bertoni", "Fulgencio Yegros", "General Higinio Morínigo", "Maciel", "San Juan Nepomuceno", "Tavaí", "Yuty", "3 de Mayo"],
+            "Itapúa": ["Encarnación", "Alto Verá", "Bella Vista", "Cambyretá", "Capitán Meza", "Capitán Miranda", "Carlos Antonio López", "Carmen del Paraná", "Coronel Bogado", "Edelira", "Fram", "General Artigas", "General Delgado", "Hohenau", "Itapúa Poty", "Jesús", "José Leandro Oviedo", "La Paz", "Mayor Julio Dionisio Otaño", "Natalio", "Nueva Alborada", "Obligado", "Pirapó", "San Cosme y Damián", "San Juan del Paraná", "San Pedro del Paraná", "San Rafael del Paraná", "Tomás Romero Pereira", "Trinidad", "Yatytay"],
+            "Misiones": ["San Juan Bautista", "Ayolas", "San Ignacio Guazú", "San Miguel", "San Patricio", "Santa María de Fe", "Santa Rosa de Lima", "Santiago", "Villa Florida", "Yabebyry"],
+            "Paraguarí": ["Paraguarí", "Acahay", "Caapucú", "Carapeguá", "Escobar", "General Bernardino Caballero", "La Colmena", "María Antonia", "Mbuyapey", "Pirayú", "Quiindy", "Quyquyhó", "San Roque González de Santa Cruz", "Sapucai", "Tebicuarymí", "Yaguarón", "Ybycuí", "Ybytymí"],
+            "Alto Paraná": ["Ciudad del Este", "Doctor Juan León Mallorquín", "Doctor Raúl Peña", "Domingo Martínez de Irala", "Hernandarias", "Iruña", "Itakyry", "Juan Emilio O'Leary", "Los Cedrales", "Mbaracayú", "Minga Guazú", "Minga Porá", "Ñacunday", "Naranjal", "Presidente Franco", "San Alberto", "San Cristóbal", "Santa Fe del Paraná", "Santa Rita", "Santa Rosa del Monday", "Tavapy", "Yguazú"],
+            "Central": ["Areguá", "Capiatá", "Fernando de la Mora", "Guarambaré", "Itá", "Itauguá", "Julián Augusto Saldívar", "Lambaré", "Limpio", "Luque", "Mariano Roque Alonso", "Ñemby", "Nueva Italia", "San Antonio", "San Lorenzo", "Villa Elisa", "Villeta", "Ypacaraí", "Ypané"],
+            "Ñeembucú": ["Pilar", "Alberdi", "Cerrito", "Desmochados", "General José Eduvigis Díaz", "Guazú Cuá", "Humaitá", "Isla Umbú", "Laureles", "Mayor José J. Martínez", "Paso de Patria", "San Juan Bautista del Ñeembucú", "Tacuaras", "Villa Franca", "Villa Oliva", "Villalbín"],
+            "Amambay": ["Pedro Juan Caballero", "Bella Vista Norte", "Capitán Bado", "Karapaí", "Zanja Pytá"],
+            "Canindeyú": ["Salto del Guairá", "Corpus Christi", "Curuguaty", "General Francisco Caballero Álvarez", "Itanará", "Katueté", "La Paloma", "Nueva Esperanza", "Villa Ygatimí", "Yasy Cañy", "Yby Pytá", "Ybyrarovaná", "Ypehú", "Maracaná"],
+            "Presidente Hayes": ["Villa Hayes", "Benjamín Aceval", "Doctor José Falcón", "General José María Bruguez", "Nanawa (Puerto Elsa)", "Puerto Pinasco", "Teniente Esteban Martínez", "Teniente Irala Fernández"],
+            "Boquerón": ["Filadelfia", "Loma Plata", "Mariscal Estigarribia"],
+            "Alto Paraguay": ["Fuerte Olimpo", "Bahía Negra", "Capitán Carmelo Peralta", "Puerto Casado"]
+        };
+
+        const barriosData = {
+            "Asunción": ["Sajonia", "San Antonio", "Dr. Gaspar Rodriguez de Francia", "Itá Pytã Punta", "La Encarnación", "Tacumbú", "Jukyty", "La Catedral", "General José Eduvigis Díaz", "Obrero Intendente B. Guggiari", "Roberto L. Petit", "Ricardo Brugada (Chacarita)", "San Roque", "Tte. Silvio Pettirossi", "San Vicente", "Pinozá", "Vista Alegre", "Mburicaó", "General Bernardino Caballero", "Ciudad Nueva", "Las Mercedes", "Bañado Cará Cará", "Jara", "Mariscal Francisco Solano López", "Virgen del Huerto", "Banco San Miguel", "San Cayetano", "Republicano", "Santa Ana", "Itá Enramada", "Santa Librada", "De la Residenta", "Presidente Carlos Antonio López", "Nazareth", "Terminal", "Hipódromo", "San Pablo", "Villa Aurelia", "Los Laureles", "Tembetary", "Recoleta", "Villa Morra", "Mariscal José Félix Estigarribia", "San Cristóbal", "Ycuá Satí", "Luis Alberto de Herrera", "Santa María", "Ytay", "San Jorge", "Tablada Nueva", "Virgen de Fátima", "Santa Rosa", "Virgen de la Asunción", "Bella Vista", "Santo Domingo", "Cañada del Ybyray", "Santísima Trinidad", "Manorá", "Las Lomas", "Mburucuyá", "Madame Elisa Alicia Linch", "Salvador del Mundo", "Mbocayaty", "Ñu Guazú", "Loma Pytá", "San Blas", "Botánico", "Zeballos Cué"],
+            "Fernando de la Mora": ["Centro", "Bernardino Caballero", "Domingo Savio", "Estanzuela", "IPVU", "Itá Ka'aguy", "Kokue Guasú", "Laguna Grande", "Laguna Satí", "Las Residentas", "Orilla del Campo Grande", "Pitiantuta", "San Juan", "Tres Bocas", "Villa Ofelia"],
+            "Luque": ["Primer Barrio", "Segundo Barrio", "Tercer Barrio", "Cuarto Barrio", "Bella Vista", "Cañada San Rafael", "Campo Grande", "Centro", "Compañía Marín Ka'aguy", "Costa Sosa", "Hugua de Seda", "Itapuamí", "Jukyry", "Laurelty", "Loma Merlo", "Maka'i", "Mora Cué", "Nueva Asunción (Ycuá Duré)", "Palma Loma", "San Carlos", "San Juan", "San Miguel", "Santa Catalina", "Santa Rosa", "Tarumandy", "Villa Adela", "Villa Policial", "Yka'a", "Zárate Isla", "Otros"],
+            "San Lorenzo": ["Barcequillo", "Centro", "Calle'i (San Juan)", "Capilla del Monte", "Corazón de Jesús", "Espíritu Santo", "Florida", "Kokueré", "La Encarnación", "Laurelty", "Las Malvinas", "Los Nogales", "Lucerito", "María Auxiliadora", "Mitã'i", "Ñu Porá", "Reducto", "Sagrada Familia", "San Antonio", "San Blas", "San Felipe", "San Francisco", "San Isidro", "San José", "San Juan", "San Luis", "San Miguel", "San Pedro", "San Roque", "Santa Ana", "Santa Cruz", "Santa Lucía", "Santa María", "Santo Rey", "Tayuazapé", "Villa del Agrónomo", "Villa Industrial", "Virgen de Fátima", "Virgen de los Remedios", "Otros"],
+            "Ciudad del Este": ["Catedral", "San Blas", "San Rafael", "Pablo Rojas", "Boquerón", "Ciudad Nueva", "San Miguel", "Fátima", "Obrero", "Santa Ana", "Don Bosco", "San José", "La Blanca", "Che La Reina", "Área 1", "Área 2", "Área 3", "Área 4", "Área 5", "Área 8", "Barrio Jardín", "Otros"],
+            "Lambaré": ["Centro", "Santa Lucía", "Valle Ybaté", "Puerto Pabla", "San Isidro", "Kennedy", "Villa Virginia", "Mbachió", "San Roque González de Santa Cruz", "Otros"],
+            "Capiatá": ["Centro", "San Roque", "La Candelaria", "Nuestra Señora de la Asunción", "San Miguel", "Costa Salinas", "Posta Ybycuá", "Posta Ybyraró", "Toledo Cañada", "Aldana Cañada", "Arroyo Culantrillo", "Otros"],
+        };
+        
+        const seccionalesColoradas = [ 
+            "Seccional Nro. 1 (Capital - Ricardo Brugada)", "Seccional Nro. 2 (Capital - La Encarnación)", "Seccional Nro. 3 (Capital - San Roque)", "Seccional Nro. 7 (Capital - Gral. Bernardino Caballero)",
+            "Seccional Nro. 1 de Lambaré", "Seccional Nro. 1 de Luque", "Seccional Nro. 1 de San Lorenzo", "Seccional Nro. 1 de Fernando de la Mora", "Seccional Nro. 1 de Capiatá",
+            "Seccional Nro. 1 FDM", "Seccional Nro. 2 FDM", "Seccional Nro. 3 FDM", "Seccional Nro. 4 FDM",
+            "Seccional Saturio Rios SL", "Seccional Nro. 2 Sto Silva SL", "Seccional Nro. 3 Domingo Savio SL",
+            "Otra Seccional (Especificar)"
+        ];
+
+        // DATOS INICIALES
+        const prepopulatedPeople = [
+            {id: 1, fullName: "Avilio Acuña", ci: "508256", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 2, fullName: "Martin Manuel Acuña Miranda", ci: "4221539", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 3, fullName: "Rogelio Matias Acuña Miranda", ci: "5724070", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 4, fullName: "Eduardo Daniel Acuña Ramos", ci: "2432478", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 5, fullName: "Enrique David Acuña Ramos", ci: "4671940", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 6, fullName: "Mauricio Jose Aguilera Caballero", ci: "4641054", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 7, fullName: "Olga Lucia Alen Duarte", ci: "3176282", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 8, fullName: "Oscar Ariel Arce Alcaraz", ci: "4107096", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 9, fullName: "Ruth Isabel Argaña Caballero", ci: "5417833", phone: "0982817983", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 10, fullName: "Josias Misael Arguello Soto", ci: "4795891", phone: "0994693204", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 11, fullName: "Ramon David Avalos Scappini", ci: "5216240", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 12, fullName: "Carlos Rafael Balbuena", ci: "5026466", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 13, fullName: "Maria Gloria Benitez Benitez", ci: "3528405", phone: "0971124012", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 14, fullName: "Mirta Concepcion Biancoti britez", ci: "489833", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 15, fullName: "Miran Mabel Caballero Pereira", ci: "3663829", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 16, fullName: "Patricia Carolina Cantero Ramos", ci: "3643278", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 17, fullName: "Cynthia Marlene Cantero Ramos", ci: "3643277", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 18, fullName: "Ramona Carissimo Guillón", ci: "1504031", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 19, fullName: "Guillermo Cubilla", ci: "3588274", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 20, fullName: "Cristian Lexi Destefano Blanco", ci: "3627535", phone: "0981171160", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 21, fullName: "Maria Francisca Duarte", ci: "1124583", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 22, fullName: "Carmen Elizabeth Duarte Portillo", ci: "4169787", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 23, fullName: "Elias Samuel Dure Rivas", ci: "5630792", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 24, fullName: "Maria Gabriela Escobar Ortiz", ci: "3389316", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 25, fullName: "Christyan David Florentin Rodriguez", ci: "4510717", phone: "0991783312", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 26, fullName: "Mar Edil Franco Acosta", ci: "3406143", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 27, fullName: "Laura Giselle Galeano Vera", ci: "5202711", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 28, fullName: "Natalia Andrea Galli Britez", ci: "3647874", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 29, fullName: "Rodrigo Aaron Genes Chaparro", ci: "4708328", phone: "0982962200", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 30, fullName: "Gissell Maria Gimenez Domingues", ci: "6132662", phone: "0982387325", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 31, fullName: "Sergio Manuel Gonzalez Ramirez", ci: "4388231", phone: "0983430341", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 32, fullName: "Johana Belen Jacquet Vera", ci: "3798381", phone: "0982119662", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 33, fullName: "Kevin Silver Jaimes", ci: "8527755", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 34, fullName: "Jose Arnaldo Leon Valiente", ci: "4387114", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 35, fullName: "Thamara Machuca Sosa", ci: "4302697", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 36, fullName: "Natalia Elizabeth Maciel Gonzalez", ci: "2194170", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 37, fullName: "Jhon Anthony Meilicke Ruiz Diaz", ci: "3971966", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 38, fullName: "Dilma Maria Patria Miltos Flores", ci: "3562546", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 39, fullName: "Isaias Enmanuel Nunes Gimenez", ci: "4608176", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 40, fullName: "Mirle Mar Nuñez Gonzalez", ci: "4911314", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 41, fullName: "Miguela Ozuna de Alonso", ci: "2150029", phone: "0982285012", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 42, fullName: "Maria Teresa Pereira", ci: "528774", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 43, fullName: "Evarista Luz Marina Ramos Jimenez", ci: "742723", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 44, fullName: "Aida Agustina Ramos Vda de Cantero", ci: "742728", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 45, fullName: "Andres Daniel Recalde Gonzalez", ci: "4063688", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 46, fullName: "Christian David Riquelme Rotela", ci: "4408292", phone: "0985664037", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 47, fullName: "Luisa de Jesus Rivas Dominguez", ci: "3216176", phone: "0982692053", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 48, fullName: "Silvio Ignacio Rivas Dominguez", ci: "5376270", phone: "0971669723", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 49, fullName: "Cecilia Roa Salinas", ci: "2108690", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 50, fullName: "Marian Rojas", ci: "", phone: "0974492160", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 51, fullName: "Gabriel Hassel Rojas Iglesias", ci: "3441104", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 52, fullName: "Hugo Rojas Ruiz", ci: "5313493", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 53, fullName: "Fabricio Thiago Rotela Carvalho", ci: "2431343", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 54, fullName: "Gerardo Antonio Rotela Espinoza", ci: "4624505", phone: "0981288002", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 55, fullName: "Victor Manuel Rotela Navone", ci: "4405222", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 56, fullName: "Gladis Rotela Ruiz Diaz", ci: "5440321", phone: "0991458837", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 57, fullName: "Cesar Matias Salinas Torres", ci: "3198090", phone: "0985545321", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 58, fullName: "Luis Alberto Santacruz Alfonzo", ci: "4187276", phone: "0982711687", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 59, fullName: "Cindy Micaela Schulz Recalde", ci: "6718152", phone: "0986242011", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 60, fullName: "Corina Jessabell Sosa Melgarejo", ci: "6545629", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 61, fullName: "Nelida Johanna Torres Aneiva", ci: "4643542", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 62, fullName: "Luis Fernando Torres Aneiva", ci: "4643531", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 63, fullName: "Maria de Lourdes Florentina Torres de Gonzalez", ci: "973222", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 64, fullName: "José Luis Victorio Torres Rojas", ci: "863063", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 65, fullName: "Romina Laudelina Torres Zarate", ci: "5223143", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 66, fullName: "Larissa Maribel Valdez Rotela", ci: "4582520", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 67, fullName: "Jorge Humberto Vallena Merlos", ci: "3465963", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 68, fullName: "Roberto Salomon Vallena Merlos", ci: "4388653", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 69, fullName: "Cindy Patricia Vera Ojeda", ci: "4106362", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 70, fullName: "Juan Jesus Maria Villalba Flores", ci: "3480862", phone: "0981691864", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 71, fullName: "Raquel Villalba Torales", ci: "850736", phone: "0981220380", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 72, fullName: "Milciades Ramon Villalba Veron", ci: "1724497", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 73, fullName: "Juan Angel Zarate Carmona", ci: "4843590", phone: "0984986042", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 74, fullName: "Tamara Yanina Zayas Centurion", ci: "5313581", phone: "0971465900", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 1 FDM", party: "Colorado"},
+            {id: 75, fullName: "Karina Pamela Galli Britez", ci: "3647875", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 FDM", party: "Colorado"},
+            {id: 76, fullName: "Nadia Magali Irala Vera", ci: "3770858", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 FDM", party: "Colorado"},
+            {id: 77, fullName: "Alicia Noemi Olmedo Espinola", ci: "4328450", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 FDM", party: "Colorado"},
+            {id: 78, fullName: "Carolina Molas Gozalez", ci: "4530108", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 FDM", party: "Colorado"},
+            {id: 79, fullName: "Esmelda Concepcion Vazquez Gonzalez", ci: "1105843", phone: "0981468180", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 FDM", party: "Colorado"},
+            {id: 80, fullName: "Graciela Vazquez Gonzalez", ci: "", phone: "0982733784", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 FDM", party: "Colorado"},
+            {id: 81, fullName: "Joaquina Achucarro Pintos", ci: "406019", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 FDM", party: "Colorado"},
+            {id: 82, fullName: "Sara Concepcion Ramirez Franco", ci: "4441654", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 FDM", party: "Colorado"},
+            {id: 83, fullName: "Nora Norma Chaparro de Genes", ci: "1362335", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 FDM", party: "Colorado"},
+            {id: 84, fullName: "Blasida Rosana Salinas Palma", ci: "4362475", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 FDM", party: "Colorado"},
+            {id: 85, fullName: "Juana Gregoria Jimenez", ci: "4678823", phone: "0986182932", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 FDM", party: "Colorado"},
+            {id: 86, fullName: "Liz Karina Bogado Velazquez", ci: "4634264", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 3 FDM", party: "Colorado"},
+            {id: 87, fullName: "Cecilio Caceres Silva", ci: "1028342", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 3 FDM", party: "Colorado"},
+            {id: 88, fullName: "Eduardo Daniel mongelos", ci: "3604819", phone: "0984889483", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 3 FDM", party: "Colorado"},
+            {id: 89, fullName: "Mijael Jose Nunes Gimenez", ci: "5312010", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 3 FDM", party: "Colorado"},
+            {id: 90, fullName: "Fátima Patricia Echeverría Gamarra", ci: "3649201", phone: "0992742332", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 4 FDM", party: "Colorado"},
+            {id: 91, fullName: "Sandra Lorena Garay Rios", ci: "4187168", phone: "0985743647", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 4 FDM", party: "Colorado"},
+            {id: 92, fullName: "Nelson Javier Mongelos Riveros", ci: "4263886", phone: "", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 4 FDM", party: "Colorado"},
+            {id: 93, fullName: "Daniel Gaona Barrios", ci: "2195920", phone: "0992630015", email: "", address: "", department: "Central", city: "Fernando de la Mora", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 4 FDM", party: "Colorado"},
+            {id: 94, fullName: "Miguel Alberto Santander", ci: "4643992", phone: "", email: "", address: "", department: "Central", city: "San Lorenzo", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Saturio Rios SL", party: "Colorado"},
+            {id: 95, fullName: "Jennifer Melisa Carl Cantero", ci: "6099696", phone: "", email: "", address: "", department: "Central", city: "San Lorenzo", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Saturio Rios SL", party: "Colorado"},
+            {id: 96, fullName: "Matias Dejesus Caballero Acosta", ci: "6097139", phone: "", email: "", address: "", department: "Central", city: "San Lorenzo", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Saturio Rios SL", party: "Colorado"},
+            {id: 97, fullName: "Gloria Catalina Benitez Gauto", ci: "4179379", phone: "", email: "", address: "", department: "Central", city: "San Lorenzo", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 2 Sto Silva SL", party: "Colorado"},
+            {id: 98, fullName: "Maria Belen Benitez Osorio", ci: "5246975", phone: "", email: "", address: "", department: "Central", city: "San Lorenzo", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 3 Domingo Savio SL", party: "Colorado"},
+            {id: 99, fullName: "Daniel Urban Rolon", ci: "3253740", phone: "", email: "", address: "", department: "Central", city: "San Lorenzo", barrio: "", votingCenter: "", gender: "", seccional: "Seccional Nro. 3 Domingo Savio SL", party: "Colorado"},
+            {id: 100, fullName: "Christian Emanuel Coronel Martínez", ci: "", phone: "972209597", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 101, fullName: "Gustavo David Acosta Gonzalez", ci: "", phone: "984964913", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 102, fullName: "Yvelis Giselle Gonzalez Olmedo", ci: "", phone: "983495026", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 103, fullName: "Luis Omar Mallorquín Samaniego", ci: "", phone: "971799554", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 104, fullName: "Diego Alberto Morales Concha", ci: "", phone: "972159201", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 105, fullName: "Antonio Javier Paredes Sosa", ci: "", phone: "981855557", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 106, fullName: "Dante Jesús Silvero Martínez", ci: "", phone: "994888874", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 107, fullName: "Fátima Lucia Silvero Martínez", ci: "", phone: "994158555", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 108, fullName: "Marco Antonio Silvero Martínez", ci: "", phone: "982569535", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 109, fullName: "Evelyn Montserrat Zacarías Olmedo", ci: "", phone: "976148420", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 110, fullName: "Maria Belen Leiva Rios", ci: "", phone: "981755060", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 111, fullName: "Admin Maximiliano Robles Larrosa", ci: "", phone: "972417250", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 112, fullName: "liliana Torales Bedoya", ci: "", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 113, fullName: "Paulo Augusto Giménez Sánchez", ci: "", phone: "981246570", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 114, fullName: "Juan Pablo Núñez Lara", ci: "", phone: "993541601", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 115, fullName: "Cris Lucia Torres Sosa", ci: "", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 116, fullName: "Raúl Casado Lemos", ci: "", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 117, fullName: "Ramon Mario Rodrigo Ramon", ci: "", phone: "985169069", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 118, fullName: "David Emmanuel Martínez Paredes", ci: "", phone: "982490344", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 119, fullName: "Mariela Cáceres Martínez", ci: "", phone: "981784329", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 120, fullName: "MARIA TERESA ZARATE", ci: "5611260", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 121, fullName: "MATIAS DEJESUS CABALLERO", ci: "6097139", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 122, fullName: "DERLIS ADRIAN VELAZQUEZ ESCOBAR", ci: "2866295", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 123, fullName: "WALTER DAVID BARRETO VALIENTE", ci: "5049350", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 124, fullName: "AURORA ARACELI MARTINEZ AGÜERO", ci: "5679013", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 125, fullName: "JOSE ROGELIO VIÑUALES LEZCANO", ci: "3849565", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 126, fullName: "MARIA DEL PILAR AYALA DE SANDOVAL", ci: "4385176", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 127, fullName: "MARIO DANIEL ZAYA", ci: "5069967", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 128, fullName: "MARIA JOSE BENITEZ", ci: "4467698", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 129, fullName: "CELIA CAROLINA MIERS FIGUEREDO", ci: "3170924", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 130, fullName: "DANIEL URBAN ROLON", ci: "3253740", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 131, fullName: "REBECA KENNEDY DOMINGUEZ", ci: "4328395", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 132, fullName: "CAMILA AYLEN ZARATE ESPINOLA", ci: "6775671", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 133, fullName: "NICOLAS AUGUSTO ORTIZ GONZALEZ", ci: "4879164", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 134, fullName: "AMIR SHALON DAVID PEREZ MEDINA", ci: "4923785", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 135, fullName: "SARA CAROLINA RAMOS GIMENEZ", ci: "4998210", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 136, fullName: "SAMANTA SILUANA SALINAS TORRES", ci: "4414589", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 137, fullName: "KATHERIN JANET LARREA BORDON", ci: "6156947", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 138, fullName: "RUBEN DARIO KENNEDY DOMINGUEZ", ci: "4328390", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 139, fullName: "ROBERTO SALOMON VALLENA MERLOS", ci: "4388653", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 140, fullName: "RUTH REBECA CABRAL CABRAL", ci: "7909403", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 141, fullName: "PAOLA SOLEDAD ZAYAS MORINIGO", ci: "3699195", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 142, fullName: "SANTIAGO RAUL CACERES NUÑEZ", ci: "4857236", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 143, fullName: "FABIO EMANUEL GONZALEZ AGUILERA", ci: "5170081", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 144, fullName: "JOSE CARLOS DANIEL RAMOS GIMENEZ", ci: "4275447", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 145, fullName: "NATALIA ANDREA GALLI BRITEZ", ci: "3647874", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 146, fullName: "JUAN ALBERTO FLEITAS AMARILLA", ci: "3974956", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 147, fullName: "EUSEBIO MARTINEZ", ci: "5137632", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 148, fullName: "MARIA LORENA BARRIENTOS", ci: "6898930", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 149, fullName: "JORGE DURAÑONA", ci: "5726552", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 150, fullName: "MATIAS FABIAN VILLALBA NOGUERA", ci: "4580925", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"},
+            {id: 151, fullName: "MIRLE MAR NUÑEZ GONZALEZ", ci: "4911314", phone: "", email: "", address: "", department: "Central", city: "Asunción", barrio: "", votingCenter: "", gender: "", seccional: "", party: "Colorado"}
+        ];
+        // --- FIN DE DATOS INICIALES ---
+
+        let people = []; 
+        const storedPeopleJSON = localStorage.getItem('peopleDB_v8');
+
+        if (storedPeopleJSON) {
+            try {
+                const parsedStoredPeople = JSON.parse(storedPeopleJSON);
+                if (Array.isArray(parsedStoredPeople) && parsedStoredPeople.length > 0) {
+                    people = parsedStoredPeople;
+                }
+                else if (prepopulatedPeople.length > 0) {
+                    people = prepopulatedPeople;
+                    localStorage.setItem('peopleDB_v8', JSON.stringify(people));
+                }
+            } catch (e) {
+                console.error("Error parsing localStorage data, falling back to prepopulated if available:", e);
+                if (prepopulatedPeople.length > 0) {
+                    people = prepopulatedPeople;
+                    localStorage.setItem('peopleDB_v8', JSON.stringify(people)); 
+                }
+            }
+        } else {
+            if (prepopulatedPeople.length > 0) {
+                people = prepopulatedPeople;
+                localStorage.setItem('peopleDB_v8', JSON.stringify(people)); 
+            }
+        }
+        if (!Array.isArray(people)) {
+            people = [];
+        }
+
+        let editingPersonId = null; 
+
+        const addPersonForm = document.getElementById('addPersonForm');
+        const peopleTableBody = document.getElementById('peopleTableBody');
+        const departmentSelect = document.getElementById('department');
+        const citySelect = document.getElementById('city');
+        const barrioSelect = document.getElementById('barrio'); 
+        const seccionalSelect = document.getElementById('seccional');
+        const searchTermInput = document.getElementById('searchTerm'); 
+        const filterDepartmentSelect = document.getElementById('filterDepartment');
+        const filterCitySelect = document.getElementById('filterCity');
+        const filterVotingCenterSelect = document.getElementById('filterVotingCenter'); 
+        const filterGenderSelect = document.getElementById('filterGender');
+        const filterPartySelect = document.getElementById('filterParty');
+        const clearFiltersButton = document.getElementById('clearFiltersButton'); 
+        const formTitle = document.getElementById('formTitle');
+        const submitButton = document.getElementById('submitButton');
+        const submitButtonText = document.getElementById('submitButtonText');
+        const submitButtonIcon = document.getElementById('submitButtonIcon');
+        const cancelEditButton = document.getElementById('cancelEditButton');
+        const totalMembersEl = document.getElementById('totalMembers');
+        const coloradoMembersEl = document.getElementById('coloradoMembers');
+        const liberalMembersEl = document.getElementById('liberalMembers');
+        const noPartyMembersEl = document.getElementById('noPartyMembers');
+        const customAlertEl = document.getElementById('customAlert');
+        const alertMessageEl = document.getElementById('alertMessage');
+
+        function showAlert(message, type = 'info') { 
+            alertMessageEl.textContent = message;
+            customAlertEl.className = 'custom-alert show'; 
+            if (type === 'success') {
+                customAlertEl.style.backgroundColor = '#d1fae5'; customAlertEl.style.color = '#065f46'; customAlertEl.style.borderColor = '#6ee7b7';
+            } else if (type === 'error') {
+                customAlertEl.style.backgroundColor = '#fee2e2'; customAlertEl.style.color = '#991b1b'; customAlertEl.style.borderColor = '#fca5a5';
+            } else { 
+                customAlertEl.style.backgroundColor = '#dbeafe'; customAlertEl.style.color = '#1e40af'; customAlertEl.style.borderColor = '#93c5fd';
+            }
+            setTimeout(() => { customAlertEl.classList.remove('show'); }, 3000); 
+        }
+
+        function loadDepartments() {
+            const departments = Object.keys(paraguayData);
+            departments.sort(); 
+            departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept; option.textContent = dept;
+                departmentSelect.appendChild(option.cloneNode(true));
+                filterDepartmentSelect.appendChild(option);
+            });
+        }
+
+        function loadCities(selectedDepartment, targetCitySelect, selectedCityValue = null) {
+            targetCitySelect.innerHTML = '<option value="">Seleccione una ciudad</option>'; 
+            if (targetCitySelect === citySelect) { 
+                 barrioSelect.innerHTML = '<option value="">Seleccione un barrio</option>';
+            }
+            if (selectedDepartment && paraguayData[selectedDepartment]) {
+                const cities = paraguayData[selectedDepartment];
+                cities.sort(); 
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city; option.textContent = city;
+                    if (selectedCityValue && city === selectedCityValue) {
+                        option.selected = true;
+                    }
+                    targetCitySelect.appendChild(option);
+                });
+            } else if (!selectedDepartment && targetCitySelect === filterCitySelect) { 
+                let allCities = [];
+                Object.values(paraguayData).forEach(deptCities => { allCities = allCities.concat(deptCities); });
+                allCities = [...new Set(allCities)].sort();
+                allCities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city; option.textContent = city;
+                    targetCitySelect.appendChild(option);
+                });
+            }
+        }
+
+        function loadBarrios(selectedCity, selectedBarrioValue = null) {
+            barrioSelect.innerHTML = '<option value="">Seleccione un barrio</option>'; 
+            const barrios = barriosData[selectedCity]; 
+            if (selectedCity && barrios && barrios.length > 0) { 
+                barrios.sort(); 
+                barrios.forEach(barrio => {
+                    const option = document.createElement('option');
+                    option.value = barrio;
+                    option.textContent = barrio;
+                    if (selectedBarrioValue && barrio === selectedBarrioValue) {
+                        option.selected = true;
+                    }
+                    barrioSelect.appendChild(option);
+                });
+                barrioSelect.previousElementSibling.textContent = 'Barrio (Opcional si no hay lista):'; 
+            } else {
+                 barrioSelect.innerHTML = '<option value="">No hay barrios definidos</option>';
+                 barrioSelect.previousElementSibling.textContent = 'Barrio (Opcional si no hay lista):'; 
+            }
+            barrioSelect.required = false; // Always optional now
+        }
+
+        function loadSeccionales() {
+            seccionalSelect.innerHTML = '<option value="">Seleccione una seccional (si aplica)</option>'; 
+            seccionalesColoradas.sort();
+            seccionalesColoradas.forEach(sec => {
+                const option = document.createElement('option');
+                option.value = sec; option.textContent = sec;
+                seccionalSelect.appendChild(option);
+            });
+        }
+
+        function loadVotingCenterFilter() {
+            filterVotingCenterSelect.innerHTML = '<option value="">Todos</option>'; 
+            const uniqueCenters = [...new Set(people.map(p => p.votingCenter).filter(vc => vc))] 
+                                .sort(); 
+            uniqueCenters.forEach(center => {
+                const option = document.createElement('option');
+                option.value = center;
+                option.textContent = center;
+                filterVotingCenterSelect.appendChild(option);
+            });
+        }
+
+        function resetForm() {
+            addPersonForm.reset();
+            editingPersonId = null;
+            formTitle.textContent = "Agregar Nueva Persona";
+            submitButtonText.textContent = "Agregar Persona";
+            submitButtonIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />'; 
+            cancelEditButton.classList.add('hidden');
+            document.getElementById('ci').disabled = false; // Ensure CI is enabled on reset
+            citySelect.innerHTML = '<option value="">Seleccione una ciudad</option>';
+            barrioSelect.innerHTML = '<option value="">Seleccione un barrio</option>';
+            barrioSelect.previousElementSibling.textContent = 'Barrio (Opcional si no hay lista):';
+        }
+
+        function editPerson(idToEdit) {
+            const person = people.find(p => p.id === Number(idToEdit));
+            if (!person) return;
+
+            document.getElementById('fullName').value = person.fullName;
+            document.getElementById('ci').value = person.ci;
+            // document.getElementById('ci').disabled = true; // DO NOT DISABLE CI
+            document.getElementById('phone').value = person.phone || ''; // Handle null/undefined
+            document.getElementById('email').value = person.email || '';
+            document.getElementById('address').value = person.address || '';
+            document.getElementById('department').value = person.department || '';
+            loadCities(person.department, citySelect, person.city); 
+            if (person.city) {
+                loadBarrios(person.city, person.barrio);
+            } else {
+                loadBarrios('', null); // Clear barrios if no city
+            }
+            document.getElementById('votingCenter').value = person.votingCenter || '';
+            document.getElementById('gender').value = person.gender || '';
+            document.getElementById('seccional').value = person.seccional || '';
+            document.getElementById('party').value = person.party || '';
+
+            editingPersonId = person.id;
+            formTitle.textContent = "Editar Persona";
+            submitButtonText.textContent = "Guardar Cambios";
+            submitButtonIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />'; 
+            cancelEditButton.classList.remove('hidden');
+            document.getElementById('ci').disabled = true; // Disable CI field only when editing
+            addPersonForm.scrollIntoView({ behavior: 'smooth' });
+        }
+
+         function copyPersonInfo(idToCopy) {
+            const person = people.find(p => p.id === Number(idToCopy));
+            if (!person) return;
+            const infoString = `Nombre: ${person.fullName}\nCI: ${person.ci}\nTeléfono: ${person.phone || '-'}\nEmail: ${person.email || '-'}\nDirección: ${person.address || '-'}\nDepartamento: ${person.department || '-'}\nCiudad: ${person.city || '-'}\nBarrio: ${person.barrio || '-'}\nCentro Votación: ${person.votingCenter || '-'}\nGénero: ${person.gender || '-'}\nSeccional: ${person.seccional || '-'}\nPartido: ${person.party || '-'}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(infoString)
+                    .then(() => { showAlert('Información copiada al portapapeles.', 'success'); })
+                    .catch(err => { console.error('Error al copiar: ', err); showAlert('Error al copiar la información.', 'error'); });
+            } else {
+                showAlert('La función de copiar no es compatible con este navegador.', 'error');
+            }
+        }
+
+        function clearAllFilters() {
+            searchTermInput.value = '';
+            filterDepartmentSelect.value = '';
+            filterCitySelect.innerHTML = '<option value="">Todas</option>'; 
+            loadCities(null, filterCitySelect); 
+            filterVotingCenterSelect.value = '';
+            filterGenderSelect.value = '';
+            filterPartySelect.value = '';
+            renderTable();
+            showAlert('Filtros limpiados.', 'info');
+        }
+
+        function renderTable() {
+            peopleTableBody.innerHTML = ''; 
+            const searchTerm = searchTermInput.value.toLowerCase().trim();
+            const filters = {
+                department: filterDepartmentSelect.value, 
+                city: filterCitySelect.value,
+                votingCenter: filterVotingCenterSelect.value, 
+                gender: filterGenderSelect.value, 
+                party: filterPartySelect.value
+            };
+
+            const filteredPeople = people.filter(person => {
+                const departmentMatch = filters.department === '' || person.department === filters.department;
+                const cityMatch = filters.city === '' || person.city === filters.city;
+                const votingCenterMatch = filters.votingCenter === '' || person.votingCenter === filters.votingCenter; 
+                const genderMatch = filters.gender === '' || person.gender === filters.gender;
+                const partyMatch = filters.party === '' || person.party === filters.party;
+
+                let searchMatch = true;
+                if (searchTerm) {
+                    searchMatch = (person.fullName.toLowerCase().includes(searchTerm)) ||
+                                  (person.ci.toLowerCase().includes(searchTerm)) ||
+                                  (person.phone && person.phone.toLowerCase().includes(searchTerm));
+                }
+                return departmentMatch && cityMatch && votingCenterMatch && genderMatch && partyMatch && searchMatch;
+            });
+
+            if (filteredPeople.length === 0) {
+                const emptyMessage = (searchTerm || filters.department || filters.city || filters.votingCenter || filters.gender || filters.party)
+                                   ? "No hay personas que coincidan con los filtros aplicados."
+                                   : "No hay personas registradas aún. Agregue personas usando el formulario o revise la variable 'prepopulatedPeople' en el script si esperaba datos iniciales.";
+                peopleTableBody.innerHTML = `<tr><td colspan="13" class="text-center py-4 text-gray-500">${emptyMessage}</td></tr>`;
+            } else {
+                filteredPeople.forEach(person => {
+                    const row = peopleTableBody.insertRow();
+                    row.insertCell().textContent = person.fullName;
+                    row.insertCell().textContent = person.ci;
+
+                    const phoneCell = row.insertCell();
+                    if (person.phone) {
+                        const whatsappNumber = person.phone.startsWith('0') ? '595' + person.phone.substring(1) : person.phone;
+                        phoneCell.innerHTML = `<a href="https://wa.me/${whatsappNumber.replace(/\s/g, '')}" target="_blank" class="whatsapp-link">${person.phone} <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 inline-block"><path fill-rule="evenodd" d="M14 2.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0 0 1h2.15L7.573 8.073a.5.5 0 0 0 .707.707L13.5 3.651V5.5a.5.5 0 0 0 1 0v-3ZM2.5 4A1.5 1.5 0 0 0 1 5.5v7A1.5 1.5 0 0 0 2.5 14h7a1.5 1.5 0 0 0 1.5-1.5V9.75a.5.5 0 0 0-1 0V12.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-7a.5.5 0 0 1 .5-.5H6.25a.5.5 0 0 0 0-1H2.5Z" clip-rule="evenodd" /></svg></a>`;
+                    } else {
+                        phoneCell.textContent = '-';
+                    }
+                    
+                    row.insertCell().textContent = person.email || '-';
+                    row.insertCell().textContent = person.address || '-';
+                    row.insertCell().textContent = person.department || '-';
+                    row.insertCell().textContent = person.city || '-';
+
+                    const barrioCell = row.insertCell();
+                    const mapQuery = encodeURIComponent(`${person.address || ''}, ${person.barrio || ''}, ${person.city || ''}, ${person.department || ''}, Paraguay`);
+                    if (person.city || person.address) { 
+                        barrioCell.innerHTML = `<a href="https://www.google.com/maps/search/?api=1&query=${mapQuery}" target="_blank" class="map-link">${person.barrio || '-'} <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 inline-block"><path d="M8 1a3.5 3.5 0 0 0-3.5 3.5c0 2.953 3.168 6.92 3.336 7.142a.5.5 0 0 0 .328.158.5.5 0 0 0 .328-.158C8.332 11.42 11.5 7.453 11.5 4.5A3.5 3.5 0 0 0 8 1Zm0 9.527C6.464 8.651 5.5 6.25 5.5 4.5a2.5 2.5 0 1 1 5 0c0 1.75-.964 4.151-2.5 6.027ZM8 3.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/></svg></a>`;
+                    } else {
+                        barrioCell.textContent = person.barrio || '-';
+                    }
+                    
+                    row.insertCell().textContent = person.votingCenter || '-';
+                    row.insertCell().textContent = person.gender || '-';
+                    row.insertCell().textContent = person.seccional || '-';
+                    row.insertCell().textContent = person.party || '-';
+
+                    const actionsCell = row.insertCell();
+                    actionsCell.classList.add('actions-cell'); 
+                    const editButton = document.createElement('button');
+                    editButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>';
+                    editButton.classList.add('action-button', 'edit-button');
+                    editButton.title = "Editar";
+                    editButton.onclick = () => editPerson(person.id);
+                    actionsCell.appendChild(editButton);
+                    const copyButton = document.createElement('button');
+                    copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 4.625-2.25-2.25m0 0L15.75 15m2.25 2.25-2.25 2.25m0 0L15.75 19.5M15.75 15h-3.75" /></svg>';
+                    copyButton.classList.add('action-button', 'copy-button');
+                    copyButton.title = "Copiar Información";
+                    copyButton.onclick = () => copyPersonInfo(person.id);
+                    actionsCell.appendChild(copyButton);
+                    const deleteButton = document.createElement('button');
+                    deleteButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12.56 0c1.153 0 2.243.096 3.222.261m3.478 3.478A10.5 10.5 0 0 1 14.25 5.79m0 0A10.5 10.5 0 0 0 10.5 3.25m4.095 2.539a48.63 48.63 0 0 1-3.478-.397M6.44 5.79L5.722 2.59m0 0A2.25 2.25 0 0 1 7.76 1h8.484a2.25 2.25 0 0 1 2.038 1.59l-.722 3.2M7.76 1L5.722 2.59m5.94-1.59L10.5 3.25m0 0L8.455 5.79m2.045-2.54a48.583 48.583 0 0 0-3.478.397m3.478-.397L7.76 1m2.74 2.25L10.5 5.79m2.045-2.54a48.583 48.583 0 0 1 3.478.397m-3.478-.397L12.24 1m2.51 1.59L13.5 5.79m0-2.54a48.63 48.63 0 0 0 3.478.397m-3.478-.397L16.24 1m-1.245 4.79L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12.56 0c1.153 0 2.243.096 3.222.261" /></svg>';
+                    deleteButton.classList.add('action-button', 'delete-button');
+                    deleteButton.title = "Eliminar";
+                    deleteButton.onclick = () => deletePerson(person.id);
+                    actionsCell.appendChild(deleteButton);
+                });
+            }
+            updateCounters();
+            localStorage.setItem('peopleDB_v8', JSON.stringify(people)); 
+        }
+
+        function submitForm(event) { 
+            event.preventDefault();
+            const formData = new FormData(addPersonForm);
+            
+            // Get CI value directly from the input, as it might be disabled when editing
+            const ciValue = document.getElementById('ci').value.trim().replace(/\./g, '').replace(/,/g, '');
+
+            const personData = {
+                fullName: formData.get('fullName').trim(),
+                ci: ciValue, // Use the directly fetched CI value
+                phone: formData.get('phone').trim().replace(/\s/g, ''),
+                email: formData.get('email').trim(),
+                address: formData.get('address').trim(),
+                department: formData.get('department'),
+                city: formData.get('city'),
+                barrio: formData.get('barrio'), 
+                votingCenter: formData.get('votingCenter').trim(),
+                gender: formData.get('gender'),
+                seccional: formData.get('seccional'),
+                party: formData.get('party')
+            };
+
+            if (!personData.fullName || !personData.ci) {
+                showAlert('Por favor, complete al menos Nombre y Apellido, y Cédula de Identidad.', 'error');
+                return;
+            }
+            
+            if (personData.phone && !/^\d{6,15}$/.test(personData.phone.replace(/\s+/g, ''))) { 
+                 showAlert('Número de teléfono inválido. Use solo números, ej: 0981123456 o 021123456.', 'error');
+                return;
+            }
+
+            if (editingPersonId !== null) {
+                const personIndex = people.findIndex(p => p.id === editingPersonId);
+                if (personIndex > -1) {
+                    // Preserve the original ID, merge other data
+                    people[personIndex] = { ...people[personIndex], ...personData }; 
+                    showAlert('Persona actualizada exitosamente.', 'success');
+                } else {
+                     showAlert('Error: No se encontró la persona para actualizar.', 'error');
+                }
+                resetForm(); 
+            } else {
+                // Adding new person
+                if (personData.ci && people.some(p => p.ci === personData.ci && p.ci !== "")) { 
+                    showAlert('Error: Ya existe una persona con esa Cédula de Identidad.', 'error');
+                    return; 
+                }
+                const newId = people.length > 0 ? Math.max(0, ...people.map(p => p.id)) + 1 : 1; 
+                const newPerson = { ...personData, id: newId };
+                people.push(newPerson);
+                showAlert('Persona agregada exitosamente.', 'success');
+                resetForm(); 
+            }
+            
+            loadVotingCenterFilter(); 
+            renderTable(); 
+        }
+
+
+        function deletePerson(idToDelete) {
+            if (confirm('¿Está seguro de que desea eliminar a esta persona? Esta acción no se puede deshacer.')) {
+                people = people.filter(person => person.id !== Number(idToDelete));
+                showAlert('Persona eliminada exitosamente.', 'success');
+                if (editingPersonId === Number(idToDelete)) {
+                    resetForm();
+                }
+                loadVotingCenterFilter(); 
+                renderTable(); 
+            }
+        }
+
+
+        function updateCounters() {
+            totalMembersEl.textContent = people.length;
+            coloradoMembersEl.textContent = people.filter(p => p.party === 'Colorado').length;
+            liberalMembersEl.textContent = people.filter(p => p.party === 'Liberal').length;
+            noPartyMembersEl.textContent = people.filter(p => p.party === 'Sin Partido' || !p.party).length;
+        }
+
+        // --- Event Listeners ---
+        addPersonForm.addEventListener('submit', submitForm); 
+        cancelEditButton.addEventListener('click', resetForm); 
+        clearFiltersButton.addEventListener('click', clearAllFilters); 
+
+        departmentSelect.addEventListener('change', (e) => { 
+            loadCities(e.target.value, citySelect); 
+        });
+        citySelect.addEventListener('change', (e) => { 
+            loadBarrios(e.target.value);
+        });
+
+        searchTermInput.addEventListener('input', renderTable); 
+        filterDepartmentSelect.addEventListener('change', (e) => { 
+            loadCities(e.target.value, filterCitySelect); 
+            renderTable(); 
+        });
+        filterCitySelect.addEventListener('change', renderTable);
+        filterVotingCenterSelect.addEventListener('change', renderTable); 
+        filterGenderSelect.addEventListener('change', renderTable);
+        filterPartySelect.addEventListener('change', renderTable);
+
+        // --- Inicialización ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDepartments();
+            loadCities(null, filterCitySelect); 
+            loadSeccionales();
+            loadVotingCenterFilter(); 
+            renderTable(); 
+        });
+    </script>
+</body>
+</html>
