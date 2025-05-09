@@ -1,3 +1,6 @@
+```html
+--- START OF FILE LCR606060.html ---
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -93,6 +96,13 @@
         }
         .secondary-button:hover {
             background-color: #4b5563; /* Gris oscuro */
+        }
+        .export-button {
+            background-color: #10B981; /* Verde Esmeralda */
+            margin-left: 0.5rem;
+        }
+        .export-button:hover {
+            background-color: #059669; /* Verde Esmeralda Oscuro */
         }
 
 
@@ -201,6 +211,12 @@
             background-color: #e5e7eb;
             color: #9ca3af;
             cursor: not-allowed;
+        }
+        #filteredResultsCount {
+            font-size: 1.25rem; /* Slightly smaller than h2 */
+            font-weight: 500;
+            color: #4b5563; /* Gray, to differentiate from the main title red */
+            margin-left: 0.5rem;
         }
 
     </style>
@@ -349,6 +365,12 @@
                     </svg>
                     Limpiar Filtros
                 </button>
+                <button type="button" id="exportFilteredButton" class="export-button inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    Exportar Filtrado a Excel
+                </button>
             </div>
         </div>
         <div class="counter-section bg-white shadow-md rounded-lg p-6 mb-8">
@@ -374,7 +396,19 @@
         </div>
 
         <div class="table-section bg-white shadow-md rounded-lg p-6 overflow-x-auto">
-            <h2><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 inline-block mr-2 align-text-bottom"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5M8.25 12h7.5m-7.5 5.25h7.5M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>Lista de Personas Registradas</h2>
+            <div class="flex justify-between items-center">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 inline-block mr-2 align-text-bottom">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5M8.25 12h7.5m-7.5 5.25h7.5M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>Lista de Personas Registradas <span id="filteredResultsCount"></span>
+                </h2>
+                <button type="button" id="exportAllButton" class="export-button inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    Exportar Todo a Excel
+                </button>
+            </div>
             <table class="table-auto w-full mt-4 border-collapse border border-gray-300">
                 <thead>
                     <tr>
@@ -661,6 +695,9 @@
         const customAlertEl = document.getElementById('customAlert');
         const alertMessageEl = document.getElementById('alertMessage');
         const paginationControlsEl = document.getElementById('paginationControls');
+        const exportAllButton = document.getElementById('exportAllButton');
+        const exportFilteredButton = document.getElementById('exportFilteredButton');
+        const filteredResultsCountEl = document.getElementById('filteredResultsCount');
 
 
         function showAlert(message, type = 'info') { 
@@ -1026,8 +1063,16 @@
             const filtered = getFilteredPeople();
             displayPage(filtered, peopleTableBody, rowsPerPage, currentPage);
             setupPagination(filtered, paginationControlsEl, rowsPerPage);
-            updateCounters(); // Actualiza los contadores generales con todos los 'people'
+            updateCounters(); 
             localStorage.setItem('peopleDB_v8', JSON.stringify(people)); 
+            
+            // Update filtered results count
+            const activeFilters = searchTermInput.value || filterDepartmentSelect.value || filterCitySelect.value || filterVotingCenterSelect.value || filterGenderSelect.value || filterPartySelect.value;
+            if(activeFilters){
+                 filteredResultsCountEl.textContent = `(${filtered.length})`;
+            } else {
+                 filteredResultsCountEl.textContent = `(${people.length})`; // Show total if no filters
+            }
         }
 
 
@@ -1083,7 +1128,7 @@
             }
             
             loadVotingCenterFilter(); 
-            currentPage = 1; // Go to first page after add/edit to see the new/updated item if not filtered out
+            currentPage = 1; 
             renderTable(); 
         }
 
@@ -1096,9 +1141,9 @@
                     resetForm();
                 }
                 loadVotingCenterFilter();
-                const filtered = getFilteredPeople(); // Recalculate filtered items
+                const filtered = getFilteredPeople(); 
                 const totalPages = Math.ceil(filtered.length / rowsPerPage);
-                if (currentPage > totalPages && totalPages > 0) { // If current page is now out of bounds
+                if (currentPage > totalPages && totalPages > 0) { 
                     currentPage = totalPages;
                 } else if (totalPages === 0) {
                     currentPage = 1;
@@ -1109,11 +1154,74 @@
 
 
         function updateCounters() {
-            totalMembersEl.textContent = people.length; // This counts all people, not just filtered/paginated
+            totalMembersEl.textContent = people.length; 
             coloradoMembersEl.textContent = people.filter(p => p.party === 'Colorado').length;
             liberalMembersEl.textContent = people.filter(p => p.party === 'Liberal').length;
             noPartyMembersEl.textContent = people.filter(p => p.party === 'Sin Partido' || !p.party).length;
         }
+
+        function sanitizeCsvValue(value) {
+            if (value === null || typeof value === 'undefined') {
+                return '';
+            }
+            let strValue = String(value);
+            strValue = strValue.replace(/"/g, '""');
+            if (strValue.includes(',') || strValue.includes('\n') || strValue.includes('"')) {
+                strValue = `"${strValue}"`;
+            }
+            return strValue;
+        }
+
+        function exportToExcel(dataToExport, filename = 'votantes_export.csv') {
+            if (!dataToExport || dataToExport.length === 0) {
+                showAlert('No hay datos para exportar.', 'info');
+                return;
+            }
+
+            const headers = [
+                "Nombre Completo", "CI", "Teléfono", "Email", "Dirección",
+                "Departamento", "Ciudad", "Barrio", "Centro Votación",
+                "Género", "Seccional", "Partido"
+            ];
+
+            let csvContent = "\uFEFF"; 
+            csvContent += headers.join(',') + '\r\n';
+
+            dataToExport.forEach(person => {
+                const row = [
+                    sanitizeCsvValue(person.fullName),
+                    sanitizeCsvValue(person.ci),
+                    sanitizeCsvValue(person.phone),
+                    sanitizeCsvValue(person.email),
+                    sanitizeCsvValue(person.address),
+                    sanitizeCsvValue(person.department),
+                    sanitizeCsvValue(person.city),
+                    sanitizeCsvValue(person.barrio),
+                    sanitizeCsvValue(person.votingCenter),
+                    sanitizeCsvValue(person.gender),
+                    sanitizeCsvValue(person.seccional),
+                    sanitizeCsvValue(person.party)
+                ];
+                csvContent += row.join(',') + '\r\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                showAlert('Datos exportados a ' + filename, 'success');
+            } else {
+                showAlert('La exportación automática no es compatible con tu navegador.', 'error');
+            }
+        }
+
 
         // --- Event Listeners ---
         addPersonForm.addEventListener('submit', submitForm); 
@@ -1127,7 +1235,6 @@
             loadBarrios(e.target.value);
         });
 
-        // Function to reset to page 1 and render table, for filter changes
         function handleFilterChange() {
             currentPage = 1;
             renderTable();
@@ -1142,6 +1249,15 @@
         filterVotingCenterSelect.addEventListener('change', handleFilterChange); 
         filterGenderSelect.addEventListener('change', handleFilterChange);
         filterPartySelect.addEventListener('change', handleFilterChange);
+
+        exportAllButton.addEventListener('click', () => {
+            exportToExcel(people, 'todos_los_votantes.csv');
+        });
+
+        exportFilteredButton.addEventListener('click', () => {
+            const filteredData = getFilteredPeople();
+            exportToExcel(filteredData, 'votantes_filtrados.csv');
+        });
 
         // --- Inicialización ---
         document.addEventListener('DOMContentLoaded', () => {
